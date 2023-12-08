@@ -4,70 +4,57 @@
 #include <string>
 #include<vector>
 using namespace std;
-short CntIDauthor = 0,CntIDbook = 0,CntIdSec,CntIdLL,CntNameSec,CntAID;//, CntNameLL = 0 , CntNameSec = 0 , CntGpaSec = 0 , CntGpaLL=0
+short CntIDauthor = 0,CntIDbook = 0,CntIdSec,CntIdLL;//, CntNameLL = 0 , CntNameSec = 0 , CntGpaSec = 0 , CntGpaLL=0
 
 void shiftd(char aid[15],short mid);
 void printbook(char isbn[] );
-//Secondary index using the Author Name (for the Authors data file).
-void insertSortedAname(char name[],char aid[])
+void insertLL(char isbn[])
 {
-	fstream Namesec;
-	fstream NameLink;
-	Namesec.open("secAthrName.txt",ios::out|ios::in|ios::binary);
-	NameLink.open("athrIDLL.txt",ios::out|ios::in|ios::binary);
-	streampos end,begin,lend,lbeg;
-	if (idsec.bad())
-    {
-        cout << "failed to open sec1" << endl;
-        return ;
-    }
-	idsec.seekg(0,ios::beg);
-	begin=idsec.tellg();
-	idsec.seekg(0,ios::end);
-	end=idsec.tellg();
-	idsec.close();
-	idsec2.seekg(0,ios::beg);
-	lbeg=idsec2.tellg();
-	idsec2.seekg(0,ios::end);
-	lend=idsec2.tellg();
+	fstream  idsec2("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+	idsec2.seekp(0, ios::beg);
+	vector<short>avail;
+	if (avail.empty())
+	{
+		avail.push_back(-1);
+		idsec2.write((char*)&avail[avail.size() - 1], sizeof(avail[avail.size() - 1]));
+	}
 	idsec2.close();
-	CntNameSec=(end-begin)/32;
-	CntAID=(lend-lbeg)/17;
-    short first = 0;
-	short last = CntNameSec - 1;
-	short mid;
-	bool found = false;
-	char temp[30];
-	while (first <= last && !found)
-	{
-		mid = (first + last) / 2;
-		NameSec.seekg(mid * 32, ios::beg);
-		NameSec.read((char*)&temp, sizeof(temp));
-
-		if (strcmp(temp, name) == 0)
-			found = true;
-		else if (strcmp(temp, name) == 1)
-			last = mid - 1;
-		else
-			first = mid + 1;
+	short header;
+	idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+	idsec2.seekg(0, ios::beg);
+	idsec2.read((char*)&header, sizeof(header));
+	idsec2.close();
+	cout << "header: " << header << endl;
+	bool flag = true;
+	short insertionOffset;//for the pointer that points to the new inserted record in ll list 
+	if (header != -1)//avail list is not empty
+	{// 5 8 
+		flag = false;
+		idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+		idsec2.seekp(header, ios::end);//0
+	
+		idsec2.write(isbn, 15);
+		short nega = -1;
+		idsec2.write((char*)&nega, sizeof(nega));
+		insertionOffset = header;
+		idsec2.close();
+	
+		avail.pop_back();
+		idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+		idsec2.seekp(0, ios::beg);
+		idsec2.write((char*)&avail[avail.size() - 1], sizeof(avail[avail.size() - 1]));
+		idsec2.close();
 	}
-    NameSec.close();
-	if(!found)//doesnot exist
-	{
-		if()
-	}
-    
-
 }
 void insertsortedAidSec(char aid[],char isbn[])
 {
-	fstream idsec;
-	fstream idsec2;
-	idsec.open("secAthrId.txt",ios::out|ios::in|ios::binary);
-	idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+	fstream idsec("secAthrId.txt",ios::out|ios::in|ios::binary);
+	fstream  idsec2("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+	//idsec.open("secAthrId.txt",ios::out|ios::in|ios::binary);
+	//idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
 	streampos end,begin,lend,lbeg;
 	 if (idsec.bad())
-        
+        {
             cout << "failed to open sec1" << endl;
             return ;
         }
@@ -105,6 +92,7 @@ void insertsortedAidSec(char aid[],char isbn[])
 			first = mid + 1;
 	}
 	idsec.close();
+	
 	if(!found)//didnot find the id in the secondary index file
 	{
 		cout<<"didnot find the id in the secondary index file"<<endl;
@@ -235,9 +223,8 @@ void insertsortedAidSec(char aid[],char isbn[])
 		}
 
 	}
-	else// they secondary key exist before
+	else// they secindary key exist before
 	{
-		cout<<" they secondary key exist before"<<endl;
 		short offInd;
 		idsec.open("secAthrId.txt",ios::out|ios::in|ios::binary);
 		idsec.seekp((mid*17)+15,ios::beg);
@@ -271,31 +258,22 @@ void insertsortedAidSec(char aid[],char isbn[])
 				break;
 
 			}
-			else if(next==-2)
-			{
-				idsec2.seekg(-17,ios::cur);
-				idsec2.write(isbn,15);
-				short t=-1;
-				idsec2.write((char*)&t,2);
-				break;
-			}
 			else
 			{
 				cout<<" entered -1 else "<<endl;
 				idsec2.seekg((next*17)+15,ios::beg);
 			}
-			cout<<"out==>"<<endl;
+			
 
 		}
 		idsec2.close();
 
-/*		idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
+		idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
 	   char idtemp[15];
 	   short idoffset;
 	   idsec2.read(idtemp,15);
 	   idsec2.read((char*)&idoffset,sizeof(idoffset)); 
-
-	   idsec2.close();*/
+	
 
 	}
 	idsec.close();
@@ -327,7 +305,7 @@ void insertsortedAidSec(char aid[],char isbn[])
 		i++;
 	}
 
-    idsec2.close();
+
 
 } 
 void searchBySecId(char aid[15])
@@ -371,28 +349,34 @@ void searchBySecId(char aid[15])
 	{
 		short address;
 		short offset;
-		file.seekg((mid*17)+15,ios::beg);
+        char tmp[15];
+        file.open("secAthrId.txt",ios::out|ios::in|ios::binary);
+		file.seekg((mid*17),ios::beg);
+        file.read(tmp,15);
 		file.read((char*)&offset,sizeof(offset));
 		file.close();
+        cout<<"sec key =>"<<tmp<<endl;
 		cout<<"offset of primary key :"<<offset<<endl;
 		fstream idll;
 		idll.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
 		idll.seekg(offset*17,ios::beg);
 		char isbn[15];
 		short next;
-		idll.read(isbn,15);
+		idll.read(isbn,sizeof(isbn));
 		idll.read((char*)&next,sizeof(next));
 		cout<<"isbn : "<<isbn<<"  offset :"<<next<<endl;
 		//address=BinarySearchIdbook(isbn);
-		printbook(isbn);
+		printbook((char*)&isbn);
 		/*fstream books;
 		books.open("books.txt",ios::out|ios::in|ios::binary);
 		books.seekg(address,ios::beg);*/
 		while(next!=-1)
-		{
+		{   cout<<"entered -1"<<endl;
+            idll.seekg(((next)*17) ,ios::beg);
 			idll.read(isbn,15);
 		    idll.read((char*)&next,sizeof(next));
 		    cout<<"isbn : "<<isbn<<"offset :"<<next<<endl;
+            
 		   // address=BinarySearchIdbook(isbn);
 		    printbook(isbn);
 		}
@@ -404,7 +388,7 @@ void searchBySecId(char aid[15])
 }
 void deleteIsbnS(char aid[],char isbn[])//delete primary key in secodary index after deleting a book
 {
-	fstream idsec;
+   fstream idsec;
 	fstream idsec2;
 	streampos end,beg,lend,lbeg;
 	//idsec.open("secAthrId.txt",ios::out|ios::in|ios::binary);
@@ -559,10 +543,10 @@ void  deleteSecId(char aid[15])//delete Author from the secodary index of book u
 	idsec2.open("athrIDsecLL.txt",ios::out|ios::in|ios::binary);
 	streampos end,begin,lend,lbeg;
 	 if (idsec.bad())
-        {
+    {
             cout << "failed to open sec1" << endl;
             return ;
-        }
+      }
 	idsec.seekg(0,ios::beg);
 	begin=idsec.tellg();
 	idsec.seekg(0,ios::end);
@@ -638,7 +622,7 @@ void  deleteSecId(char aid[15])//delete Author from the secodary index of book u
 			cout<<"from mid file"<<tid<<" =>"<<tmpof<<endl;
 		/*//idsec.seekg(-17,ios::end);*/
 
-			int j=(mid)+1;
+	/*		int j=(mid)+1;
 		while(j<CntIdSec)
 		{
 			cout<<"in loop"<<endl;
@@ -755,6 +739,7 @@ void  deleteSecId(char aid[15])//delete Author from the secodary index of book u
 
 }
 
+}
 void insertsortedAuthor(char id[], short offset,string fileName){
     fstream prim(fileName, ios::out | ios::in|ios::binary);
 
@@ -861,7 +846,7 @@ void insertsortedAuthor(char id[], short offset,string fileName){
 void insertsortedBooks(char isbn[15], short offset,string fileName){
     fstream prim(fileName, ios::out | ios::in|ios::binary);
 
-	char tmp[15]="" ;
+	char tmp[15] ;
 	short of = 0;
 	bool foundPlaceBetween = false;
 	if (CntIDbook == 0)//if index file is empty
@@ -872,7 +857,7 @@ void insertsortedBooks(char isbn[15], short offset,string fileName){
 		prim.write(isbn, 15);
 		prim.write((char*)&offset, sizeof(short));
 		prim.close();
-	prim.open(fileName, ios::out | ios::in|ios::binary);
+	    prim.open(fileName, ios::out | ios::in|ios::binary);
         prim.read(tt, 15);
         prim.read((char*)&rr, sizeof(rr));
 		CntIDbook++;
@@ -905,7 +890,8 @@ void insertsortedBooks(char isbn[15], short offset,string fileName){
 		CntIDbook++;
 	}
 	else{
-		prim.seekg((CntIDbook - 1) * 17, ios::beg);
+		//prim.seekg((CntIDbook - 1) * 17, ios::beg);
+        prim.seekg(- 17, ios::end);
 		char ISBNend[15];
 		short ofend;
 		//reading the last index and saving it
@@ -960,7 +946,6 @@ void insertsortedBooks(char isbn[15], short offset,string fileName){
 
 	prim.close();
 }
-
 short BinarySearchIdauthor(int ID1) // binary search in the primary index
 {
 	fstream prim("PIauthors.txt", ios::in | ios::binary | ios::out);
@@ -1039,7 +1024,6 @@ short BinarySearchIdbook(char isbn[]) // binary search in the primary index
 		return notFound;
 
 	}
-
 }
 void Deleteprimary(int ID1) // delete from primary index
 {
@@ -1410,12 +1394,12 @@ public:
             return;
         }
         int size = string(ISBN).size() + string(book_Title).size() + string(author_ID).size() + 4;
-        file.seekp(0,ios_base::end	);
+        file.seekp(0,ios_base::end);
         short end1 = file.tellp();
         file<<size << '|' <<ISBN << '|' << book_Title << '|' <<author_ID << '|';
         file.close();
         insertsortedBooks(ISBN,end1,"PIbooks.txt");
-		insertsortedAidSec(author_ID,ISBN);
+        insertsortedAidSec(author_ID,ISBN);
     }
 };
 
@@ -1429,7 +1413,7 @@ void selectQuery()
 	cin>>table;
 	cout<<"where";
 	getline(cin,condition);
-	//cin.ignore();
+	//cin.ignore;
 	if(table=="Authors")
 	{
 		if(what=="all")
@@ -1438,18 +1422,10 @@ void selectQuery()
 		}
 	}
 
-}/*Add New Author
- 
-  (Author ID)
- Update Book Title (ISBN)
- Delete Book (ISBN)
- Delete Author (Author ID)
- Print Author (Author ID)
- Print Book (ISBN)
- Write Query
- Exit*/
+}
 void mainMenu()
 {
+    fstream file;
 	while (true)
 	{
 		int choice;
@@ -1472,13 +1448,13 @@ void mainMenu()
 		else if(choice==2)
 		{
 			 Book b1;
-			out << "pls enter isbn " << endl;
+			cout << "pls enter isbn " << endl;
            cin.getline(b1.ISBN, 15);
            cout << "pls enter title: ";
            cin.getline(b1.book_Title, 30);
-        cout << "pls enter author's id :";
-        cin.getline(b1.author_ID, 15);
-          b1.saveBook(fileAuthors);
+         cout << "pls enter author's id :";
+          cin.getline(b1.author_ID, 15);
+          b1.saveBook(file);
 
 		}
 		else if(choice==3)
@@ -1517,247 +1493,7 @@ void mainMenu()
 	
 	
 }
-
-
-
-// BOOK UPDATE
-
-short BinarySearchIdbook(char isbn[]) // binary search in the primary index
-{
-    fstream prim("PIbooks.txt", ios::in | ios::binary | ios::out);
-    short first = 0;
-    short last = CntIDbook - 1;
-    //cout<<"CntIDbook: "<<CntIDbook;
-    short mid;
-    bool found = false;
-    char temp[15];
-    string ISBN(isbn);
-    while (first <= last && !found)
-    {
-
-        mid = (first + last) / 2;
-        prim.seekg(mid * 17, ios::beg);
-        prim.read(temp, 15);
-
-        if (temp == ISBN)
-            found = true;
-        else if (temp >  ISBN)
-            last = mid - 1;
-        else
-            first = mid + 1;
-    }
-    if (found)
-    {
-        short of;
-        prim.seekg((mid * 17) + 15, ios::beg);
-        prim.read((char*)&of, sizeof(of));
-        prim.close();
-        return of;
-    }
-    else
-    {
-        short notFound=-1;
-        prim.close();
-        return notFound;
-
-    }
-
-}
-
-int getTitleSizeBook(fstream& booksFile, short recordOffset){
-    booksFile.seekg(recordOffset + sizeof(short));  // Skip the record size and the '|'
-    int titleSize = 0;
-    char ch;
-    while (booksFile.get(ch) && ch != '|') {
-        titleSize++;
-    }
-    return titleSize;
-}
-
-void updateBookTitle(string BdataFile, string Pbook, char ISBN [], char newTitle[]) {
-
-    fstream booksPrimaryIndex(Pbook , ios::in | ios::out | ios::binary) ;
-    fstream booksFile(BdataFile ,ios::in | ios::out | ios::binary ) ;
-
-    short offset = BinarySearchIdbook(ISBN);
-    cout << "Offset: " << offset << endl;
-
-    if (offset == -1) {
-        cout << "Book with ISBN " << ISBN << " is not found" << endl;
-        return;
-    }
-
-    int oldTitleSize = getTitleSizeBook(booksFile, offset + strlen(ISBN)+1);
-    cout << "Old Title Size: " << oldTitleSize << endl;
-    booksFile.seekp(offset + strlen(ISBN)+1+ sizeof(short), ios::beg);
-
-    if (strlen(newTitle) < oldTitleSize) {
-        string paddedTitle = newTitle + string(oldTitleSize - strlen(newTitle) , ' ');
-        booksFile.write(paddedTitle.c_str(), oldTitleSize);
-    } else if (strlen(newTitle) == oldTitleSize) {
-        booksFile.write(newTitle, oldTitleSize);
-    } else {
-        cout << "New Title is bigger than the old one, please enter smaller than or equal to the old one!" << endl;
-    }
-    booksFile.close();
-    booksPrimaryIndex.close();
-}
-
-
-// __________________________________________________________________________
-
-
-
-// AUTHOR UPDATE
-short BinarySearchIdauthor(char ID[]) // binary search in the primary index
-{
-    fstream prim("PIAuthors.txt", ios::in | ios::binary | ios::out);
-    short first = 0;
-    short last = CntIDbook - 1;
-    //cout<<"CntIDbook: "<<CntIDbook;
-    short mid;
-    bool found = false;
-    char temp[15];
-    string AuthorID(ID);
-    while (first <= last && !found)
-    {
-
-        mid = (first + last) / 2; // cout<<"mid"<<mid;
-        prim.seekg(mid * 17, ios::beg);
-        prim.read(temp, 15);
-        //cout<<temp;
-        if (temp == AuthorID)
-            found = true;
-        else if (temp >  AuthorID)
-            last = mid - 1;
-        else
-            first = mid + 1;
-    }
-    if (found)
-    {
-        short of;
-        prim.seekg((mid * 17) + 15, ios::beg);
-        prim.read((char*)&of, sizeof(of));
-        prim.close();
-        return of;
-    }
-    else
-    {
-        short notFound=-1;
-        prim.close();
-        return notFound;
-
-    }
-
-}
-
-int getNameSizeAuthor(fstream& authorsFile, short recordOffset) {
-    authorsFile.seekg(recordOffset + sizeof (short));  // Skip the record size and the '|'
-    int nameSize = 0;
-    char ch;
-    while (authorsFile.get(ch) && ch != '|') {
-        nameSize++;
-    }
-    return nameSize;
-}
-
-
-void updateAuthorName(string ADataFile, string Pauthor, char authorID[], char newName[]) {
-    fstream authorsPrimaryIndex(Pauthor , ios::in | ios::out| ios::binary ) ;
-    fstream authorsFile(ADataFile , ios::in | ios::out| ios::binary);
-
-    short offset = BinarySearchIdauthor(authorID);
-    if (offset == -1) {
-        cout << "**Author with ID " << authorID << " is not found.**" << endl;
-        return;
-    }
-
-    int oldNameSize = getNameSizeAuthor(authorsFile, offset + strlen(authorID) + 1);
-    cout << "Old Name Size: " << oldNameSize << endl;
-    authorsFile.seekp(offset + strlen(authorID) + 1 + sizeof(short), ios::beg);
-
-
-    if (strlen(newName) < oldNameSize) {
-        string paddedName = newName + std::string(oldNameSize - strlen(newName), ' ');
-        authorsFile.write(paddedName.c_str(), oldNameSize);
-    } else if (strlen(newName) == oldNameSize) {
-        authorsFile.write(newName, oldNameSize);
-    } else {
-        cout << "New Author Name is bigger than the old one, please enter smaller than or equal to the old one!" << endl;
-    }
-
-    authorsFile.close();
-    authorsPrimaryIndex.close();
-}
-
-
-void printAuthor(char id[] , string Authorfile){
-    short off=BinarySearchIdauthor(id);
-    if(off<0){
-        cout<<"no such ID\n";
-
-    }
-    else{
-        fstream file(Authorfile, ios::out |ios::in | ios::binary | ios::app);
-        string l="";
-        file.seekg(off,ios::beg);
-        char c;
-        file.read((char*)&c,sizeof(c));
-        while(c!='|'){
-            l+=c;
-            file.get(c);
-        }
-        int length=stoi(l);
-        string buf;
-        file.getline((char*)&buf,length);
-        string record(buf);
-        //cout<<record;
-        int pos=record.find('|');
-        string  ID,name,address;
-        ID=record.substr(0,pos);
-        cout<<"AUTHOR'S ID : \t"<<ID<<endl;
-        record.erase(0,ID.length()+1);
-        pos=record.find('|');
-        name=record.substr(0,pos);
-        cout<<"AUTHOR'S NAME : \t"<<name<<endl;
-        record.erase(0,name.length()+1);
-        pos=record.find('|');
-        address=record.substr(0,pos);
-        cout<<"AUTHOR'S ADDRESS : \t"<<address<<endl;
-        file.close();
-    }
-
-}
-
-
-
-
-
-// Queries
-void selectAuthorsPrimary(char id[] , string Authorsfile)
-{
-    printAuthor(id , Authorsfile);
-}
-
-
-void selectAuthorNAME(char id[] , string Authorsfile)
-{
-    short offset = BinarySearchIdauthor(id);
-    if (offset == -1) {
-        cout << "**Author with ID " << id << " is not found.**" << endl;
-        return;
-    }
-
-    fstream authorsData(Authorsfile, std::ios::in | std::ios::binary | ios::out);
-    
-    char authorName[30];
-    authorsData.seekg(offset + strlen(id) + 1 + sizeof(short) , ios::beg);
-    authorsData.read(authorName, sizeof(authorName));
-    cout << "Author Name: " << authorName << std::endl;
-
-    
-}
-
+/*
 int main()
 {
         fstream primA("PIauthors.txt", ios::out | ios::in|ios::app|ios::binary);
@@ -1775,7 +1511,59 @@ int main()
 
     fstream fileAuthors;
     string name = "test.txt";
-    int n=1;
+    int n=5;
+    Author a1;
+    Book b1;
+    while(n--){
+        cout << "pls enter name " << endl;
+        cin.getline(a1.Author_Name, 30);
+        cout << "pls enter id: ";
+        cin.getline(a1.Author_ID, 15);
+        cout << "pls enter address:";
+        cin.getline(a1.Address, 30);
+        a1.saveAthr();
+    }
+  //  printAuthor(3);
+//    while(n--){
+//        cout << "pls enter isbn " << endl;
+//        cin.getline(b1.ISBN, 15);
+//        cout << "pls enter title: ";
+//        cin.getline(b1.book_Title, 30);
+//        cout << "pls enter author's id :";
+//        cin.getline(b1.author_ID, 15);
+//        b1.saveBook(fileAuthors);
+//    }
+
+//printbook("111111-111-66");
+ info.open("info.txt",ios::in | ios::out |ios::binary|ios::app);
+ info.clear();
+ info.write((char*)& CntIDauthor, sizeof(CntIDauthor));
+ info.write((char*)& CntIDbook, sizeof(CntIDbook));
+//cout<<"cntid books : "<<CntIDbook<<endl;
+info.close();
+    return 0;
+}*/
+int main()
+{
+        fstream primA("PIauthors.txt", ios::out | ios::in|ios::app|ios::binary);
+        primA.close();
+        fstream primB("PIbooks.txt", ios::out | ios::in|ios::app|ios::binary);
+        primB.close();
+
+    fstream info("info.txt",ios::in | ios::out |ios::binary|ios::app);
+    info.read((char*)& CntIDauthor, sizeof(CntIDauthor));
+    info.read((char*)& CntIDbook, sizeof(CntIDbook));
+    info.close();
+   // cout<<"cntid books : "<<CntIDbook<<endl;
+
+    //cout<<"cntid : "<<CntID<<endl;
+    fstream idsec("secAthrId.txt",ios::out|ios::in|ios::binary|ios::app);
+	fstream  idsec2("athrIDsecLL.txt",ios::out|ios::in|ios::binary|ios::app);
+    idsec.close();
+    idsec2.close();
+    fstream fileAuthors;
+    string name = "test.txt";
+    int n=3;
     Author a1;
     Book b1;
    /* while(n--){
@@ -1790,16 +1578,21 @@ int main()
   //  printAuthor(3);
  /**/
  while(n--){
-     //   cout << "pls enter isbn " << endl;
-      //  cin.getline(b1.ISBN, 15);
-     //   cout << "pls enter title: ";
-      //  cin.getline(b1.book_Title, 30);
+    
+        cout << "pls enter isbn " << endl;
+        cin.getline(b1.ISBN, 15);
+        cout << "pls enter title: ";
+        cin.getline(b1.book_Title, 30);
         cout << "pls enter author's id :";
         cin.getline(b1.author_ID, 15);
-     //  b1.saveBook(fileAuthors);
+    //    b1.saveBook(fileAuthors);
+    
+
 		//if(n==3)
 		//{
-			deleteSecId(b1.author_ID);
+            searchBySecId(b1.author_ID);
+            //printbook(b1.ISBN);
+			//deleteSecId(b1.author_ID);34376253
 		//}
 
    }   /**/
