@@ -253,11 +253,13 @@ void selectAuthorNAME(char id[] , string Authorsfile)
     }
 
     fstream authorsData(Authorsfile, std::ios::in | std::ios::binary | ios::out);
-
+    
     char authorName[30];
+    authorsData.seekg(offset + strlen(id) + 1 + sizeof(short) , ios::beg);
     authorsData.read(authorName, sizeof(authorName));
     cout << "Author Name: " << authorName << std::endl;
 
+    
 }
 
 
