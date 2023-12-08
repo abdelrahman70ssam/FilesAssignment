@@ -19,6 +19,13 @@ struct book
 
 short CntIDauthor = 0 , CntIDbook = 0, CntIdSec,CntIdLL;
 
+void printAuthor(char id[]) ;
+
+
+
+
+// BOOK UPDATE
+
 short BinarySearchIdbook(char isbn[]) // binary search in the primary index
 {
     fstream prim("PIbooks.txt", ios::in | ios::binary | ios::out);
@@ -35,7 +42,7 @@ short BinarySearchIdbook(char isbn[]) // binary search in the primary index
         mid = (first + last) / 2;
         prim.seekg(mid * 17, ios::beg);
         prim.read(temp, 15);
-        
+
         if (temp == ISBN)
             found = true;
         else if (temp >  ISBN)
@@ -104,6 +111,8 @@ void updateBookTitle(string BdataFile, string Pbook, char ISBN [], char newTitle
 // __________________________________________________________________________
 
 
+
+// AUTHOR UPDATE
 short BinarySearchIdauthor(char ID[]) // binary search in the primary index
 {
     fstream prim("PIAuthors.txt", ios::in | ios::binary | ios::out);
@@ -157,21 +166,18 @@ int getNameSizeAuthor(fstream& authorsFile, short recordOffset) {
 }
 
 
-
-
-
 void updateAuthorName(string ADataFile, string Pauthor, char authorID[], char newName[]) {
     fstream authorsPrimaryIndex(Pauthor , ios::in | ios::out| ios::binary ) ;
     fstream authorsFile(ADataFile , ios::in | ios::out| ios::binary);
 
-    int offset = BinarySearchIdauthor(authorID);
+    short offset = BinarySearchIdauthor(authorID);
     if (offset == -1) {
         cout << "**Author with ID " << authorID << " is not found.**" << endl;
         return;
     }
 
     int oldNameSize = getNameSizeAuthor(authorsFile, offset + strlen(authorID) + 1);
-    std::cout << "Old Name Size: " << oldNameSize << std::endl;
+    cout << "Old Name Size: " << oldNameSize << endl;
     authorsFile.seekp(offset + strlen(authorID) + 1 + sizeof(short), ios::beg);
 
 
@@ -181,7 +187,7 @@ void updateAuthorName(string ADataFile, string Pauthor, char authorID[], char ne
     } else if (strlen(newName) == oldNameSize) {
         authorsFile.write(newName, oldNameSize);
     } else {
-        std::cout << "New Author Name is bigger than the old one, please enter smaller than or equal to the old one!" << std::endl;
+        cout << "New Author Name is bigger than the old one, please enter smaller than or equal to the old one!" << endl;
     }
 
     authorsFile.close();
@@ -189,9 +195,70 @@ void updateAuthorName(string ADataFile, string Pauthor, char authorID[], char ne
 }
 
 
+void printAuthor(char id[] , string Authorfile){
+    short off=BinarySearchIdauthor(id);
+    if(off<0){
+        cout<<"no such ID\n";
+
+    }
+    else{
+        fstream file(Authorfile, ios::out |ios::in | ios::binary | ios::app);
+        string l="";
+        file.seekg(off,ios::beg);
+        char c;
+        file.read((char*)&c,sizeof(c));
+        while(c!='|'){
+            l+=c;
+            file.get(c);
+        }
+        int length=stoi(l);
+        string buf;
+        file.getline((char*)&buf,length);
+        string record(buf);
+        //cout<<record;
+        int pos=record.find('|');
+        string  ID,name,address;
+        ID=record.substr(0,pos);
+        cout<<"AUTHOR'S ID : \t"<<ID<<endl;
+        record.erase(0,ID.length()+1);
+        pos=record.find('|');
+        name=record.substr(0,pos);
+        cout<<"AUTHOR'S NAME : \t"<<name<<endl;
+        record.erase(0,name.length()+1);
+        pos=record.find('|');
+        address=record.substr(0,pos);
+        cout<<"AUTHOR'S ADDRESS : \t"<<address<<endl;
+        file.close();
+    }
+
+}
 
 
 
+
+
+// Queries
+void selectAuthorsPrimary(char id[] , string Authorsfile)
+{
+    printAuthor(id , Authorsfile);
+}
+
+
+void selectAuthorNAME(char id[] , string Authorsfile)
+{
+    short offset = BinarySearchIdauthor(id);
+    if (offset == -1) {
+        cout << "**Author with ID " << id << " is not found.**" << endl;
+        return;
+    }
+
+    fstream authorsData(Authorsfile, std::ios::in | std::ios::binary | ios::out);
+
+    char authorName[30];
+    authorsData.read(authorName, sizeof(authorName));
+    cout << "Author Name: " << authorName << std::endl;
+
+}
 
 
 int main()
